@@ -69,5 +69,5 @@ Verfügbare Befehle für das Java-Programm:
 > >### Contributions
 >
 > @sofoste93/ Stephane Sob Fouodji <br>
-> Herr Franz /TLS<br>
+> A. Franz<br>
 > Arduino https://www.arduino.cc/en/
