@@ -5,16 +5,28 @@ import com.fazecast.jSerialComm.*;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-
-public class Main {
+/**
+ * 2. Diagnose-Tool für den Arduino
+ * Version 1
+ * ===========================================================================================================
+ * Erstellt werden soll ein Software-Tool, welches die Schnittstelle ausliest, über die serielle Schnittstelle
+ * (USB-Port) an den PC (Host) übergibt.
+ * Im PC sollen diese Werte in einer Protokolldatei archiviert werden.
+ * ##############################################################################################
+ * In einer Erweiterung soll der Auswertevorgang vom PC angestoßen, angehalten/unterbrochen und
+ * beendet werden können.
+ * Außerdem soll eine Konfigurierbarkeit bezüglich der auszuwertenden Schnittstellen (Pins) möglich
+ * sein.
+ */
+public class DiagnoseToolVersionOne {
 
     public static void main(String[] args) {
         // Directly get COM5 port
-        SerialPort arduinoPort = SerialPort.getCommPort("COM5");
+        SerialPort arduinoPort = SerialPort.getCommPort("COM6");
 
         // Check if the port is open
         if (!arduinoPort.openPort()) {
-            System.out.println("Fehler beim Öffnen des Ports: COM5");
+            System.out.println("Error while opening the port: COM6");
             return;
         }
 
