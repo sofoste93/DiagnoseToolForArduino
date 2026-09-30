@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 260">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#06100e"/><stop offset="1" stop-color="#0c201a"/></linearGradient>
+    <linearGradient id="signal" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#8eff5a"/><stop offset="1" stop-color="#55e9ff"/></linearGradient>
+  </defs>
+  <rect width="900" height="260" rx="28" fill="url(#bg)"/>
+  <circle cx="126" cy="130" r="72" fill="none" stroke="#1d473b" stroke-width="3"/>
+  <circle cx="126" cy="130" r="48" fill="none" stroke="url(#signal)" stroke-width="10"/>
+  <path d="M72 130h24l12-23 19 48 17-35 13 10h24" fill="none" stroke="#f3fff9" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="175" cy="78" r="10" fill="#55e9ff"/>
+  <text x="230" y="120" fill="#f4fff9" font-family="Segoe UI,Arial" font-size="54" font-weight="800">ARDUINO</text>
+  <text x="230" y="174" fill="url(#signal)" font-family="Segoe UI,Arial" font-size="42" font-weight="700">MISSION CONTROL</text>
+  <text x="234" y="211" fill="#71978f" font-family="Consolas,monospace" font-size="17" letter-spacing="4">SERIAL TELEMETRY / LOCAL FIRST</text>
+</svg>

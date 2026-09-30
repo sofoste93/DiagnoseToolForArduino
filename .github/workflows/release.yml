@@ -1,0 +1,128 @@
+name: Release Arduino Mission Control
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: ${{ matrix.asset }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            asset: Arduino-Mission-Control-Windows-x64
+            installer: exe
+            app_path: target/dist/Arduino-Mission-Control
+            executable: Arduino-Mission-Control.exe
+          - os: ubuntu-24.04
+            asset: Arduino-Mission-Control-Linux-x64
+            installer: deb
+            app_path: target/dist/Arduino-Mission-Control
+            executable: bin/Arduino-Mission-Control
+          - os: macos-15-intel
+            asset: Arduino-Mission-Control-macOS-Intel
+            installer: dmg
+            app_path: target/dist/Arduino-Mission-Control.app
+            executable: Contents/MacOS/Arduino-Mission-Control
+          - os: macos-15
+            asset: Arduino-Mission-Control-macOS-Apple-Silicon
+            installer: dmg
+            app_path: target/dist/Arduino-Mission-Control.app
+            executable: Contents/MacOS/Arduino-Mission-Control
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+      - name: Test
+        run: mvn -B clean verify
+      - name: Build app image
+        shell: bash
+        run: |
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            pwsh -File scripts/package.ps1 -PackageType app-image
+          else
+            chmod +x scripts/package.sh
+            scripts/package.sh app-image
+          fi
+      - name: Smoke test bundled runtime
+        shell: bash
+        run: '"${{ matrix.app_path }}/${{ matrix.executable }}" --diagnostics'
+      - name: Build native installer
+        shell: bash
+        env:
+          WINDOWS_CERTIFICATE_BASE64: ${{ secrets.WINDOWS_CERTIFICATE_BASE64 }}
+          WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            pwsh -File scripts/package.ps1 -PackageType ${{ matrix.installer }}
+          else
+            scripts/package.sh ${{ matrix.installer }}
+          fi
+      - name: Name native installer
+        shell: bash
+        run: |
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            mv target/dist/Arduino-Mission-Control-2.0.0.exe "target/dist/${{ matrix.asset }}.exe"
+          elif [[ "${{ runner.os }}" == "Linux" ]]; then
+            mv target/dist/*.deb "target/dist/${{ matrix.asset }}.deb"
+          else
+            mv target/dist/Arduino-Mission-Control-2.0.0.dmg "target/dist/${{ matrix.asset }}.dmg"
+          fi
+      - name: Archive Windows app
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Compress-Archive -Path "${{ matrix.app_path }}" -DestinationPath "target/dist/${{ matrix.asset }}-portable.zip"
+      - name: Archive Unix app
+        if: runner.os != 'Windows'
+        shell: bash
+        run: tar -C target/dist -czf "target/dist/${{ matrix.asset }}-portable.tar.gz" "$(basename '${{ matrix.app_path }}')"
+      - uses: actions/upload-artifact@v5
+        with:
+          name: ${{ matrix.asset }}
+          path: |
+            target/dist/*.exe
+            target/dist/*.deb
+            target/dist/*.dmg
+            target/dist/*-portable.zip
+            target/dist/*-portable.tar.gz
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          path: release-assets
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: "Arduino Mission Control 2.0.0 · Serial Frontier"
+          body: |
+            ## Your board has a new flight deck
+
+            Arduino Mission Control turns the original fixed-COM-port console prototype into a complete local serial telemetry station. Every package includes its own Java runtime.
+
+            ### Highlights
+            - Automatic serial-port discovery and configurable baud rate
+            - Live multi-channel telemetry charts
+            - Bidirectional terminal and quick board commands
+            - Built-in hardware-free demo telemetry
+            - Automatic private CSV session logging
+            - English/German help and an included Arduino demo sketch
+            - Native installers and portable builds for four platforms
+
+            Windows builds support Authenticode signing as soon as publisher certificate secrets are configured.
+
+            **THOR // serial frontier acquired.**
+          files: release-assets/*
+          generate_release_notes: true
